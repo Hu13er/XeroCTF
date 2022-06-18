@@ -1,0 +1,74 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: halftimepad
+  namespace: xero
+  labels:
+    app: halftimepad
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: halftimepad
+  template:
+    metadata:
+      labels:
+        app: halftimepad
+    spec:
+      containers:
+      - name: halftimepad
+        image: hu13er/halftimepad:latest
+        env:
+          - name: "HALFTIMEPAD_ADDR"
+            value: "0.0.0.0:8888"
+        ports:
+        - containerPort: 8888
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: halftimepad
+  namespace: xero
+spec:
+  selector:
+    app: halftimepad
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8888
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/tls-acme: "true"
+  name: halftimepad
+  namespace: xero
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: "halftimepad.roboepics.com"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: halftimepad
+            port:
+              number: 80
+
+  tls:
+  - hosts:
+    - halftimepad.roboepics.com
+    secretName: halftimepad-tls

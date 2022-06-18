@@ -1,0 +1,26 @@
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ugupugu
+  namespace: xero
+  annotations:
+    kubernetes.io/tls-acme: "true" 
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+      - ugupugu.roboepics.com
+      secretName: ugupugu-tls
+  rules:
+  - host: "ugupugu.roboepics.com"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ugupugu
+            port:
+              number: 80
+

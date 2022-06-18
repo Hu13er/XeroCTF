@@ -1,0 +1,26 @@
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: captcha
+  namespace: xero
+  annotations:
+    kubernetes.io/tls-acme: "true" 
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+      - captcha.roboepics.com
+      secretName: captcha-tls
+  rules:
+  - host: "captcha.roboepics.com"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: captcha
+            port:
+              number: 80
+

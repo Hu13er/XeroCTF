@@ -1,0 +1,49 @@
+stages:
+  - build
+  - upload
+  - release
+
+variables:
+  DARWIN_AMD64_BINARY: "wm-darwin-amd64-${CI_COMMIT_TAG}"
+  WINDOWS_AMD64_BINARY: "wm-windows-amd64-${CI_COMMIT_TAG}.exe"
+  LINUX_AMD64_BINARY: "wm-linux-amd64-${CI_COMMIT_TAG}"
+  PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/wm/${CI_COMMIT_TAG}"
+
+build:
+  stage: build
+  image: golang:1.18
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - mkdir release/
+    - env GOOS=linux GOARCH=amd64 go build -o release/${LINUX_AMD64_BINARY} ./
+    - env GOOS=windows GOARCH=amd64 go build -o release/${WINDOWS_AMD64_BINARY} ./
+    - env GOOS=darwin GOARCH=amd64 go build -o release/${DARWIN_AMD64_BINARY} ./
+  artifacts:
+    paths:
+      - release/*
+
+upload:
+  stage: upload
+  image: curlimages/curl:latest
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - |
+      curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file release/${DARWIN_AMD64_BINARY} "${PACKAGE_REGISTRY_URL}/${DARWIN_AMD64_BINARY}"
+    - |
+      curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file release/${LINUX_AMD64_BINARY} "${PACKAGE_REGISTRY_URL}/${LINUX_AMD64_BINARY}"
+    - |
+      curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file release/${WINDOWS_AMD64_BINARY} "${PACKAGE_REGISTRY_URL}/${WINDOWS_AMD64_BINARY}"
+
+release:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - |
+      release-cli create --name "Release $CI_COMMIT_TAG" --tag-name $CI_COMMIT_TAG \
+        --assets-link "{\"name\":\"${DARWIN_AMD64_BINARY}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${DARWIN_AMD64_BINARY}\"}" \
+        --assets-link "{\"name\":\"${WINDOWS_AMD64_BINARY}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${WINDOWS_AMD64_BINARY}\"}" \
+        --assets-link "{\"name\":\"${LINUX_AMD64_BINARY}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${LINUX_AMD64_BINARY}\"}"

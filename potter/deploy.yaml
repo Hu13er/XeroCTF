@@ -1,0 +1,64 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: potter
+  namespace: xero
+  labels:
+    app: potter
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: potter
+  template:
+    metadata:
+      labels:
+        app: potter
+    spec:
+      containers:
+      - name: potter
+        image: hu13er/potter:latest
+        env:
+          - name: "potter"
+            value: "0.0.0.0:7887"
+        ports:
+        - containerPort: 7887
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: potter
+  namespace: xero
+spec:
+  selector:
+    app: potter
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 7887
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: potter
+  namespace: xero
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: "potter.roboepics.com"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: potter
+            port:
+              number: 80
+

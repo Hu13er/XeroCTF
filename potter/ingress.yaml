@@ -1,0 +1,26 @@
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: potter
+  namespace: xero
+  annotations:
+    kubernetes.io/tls-acme: "true" 
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+      - potter.roboepics.com
+      secretName: potter-tls
+  rules:
+  - host: "potter.roboepics.com"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: potter
+            port:
+              number: 80
+

@@ -1,0 +1,102 @@
+#          ,--,                         ,-.----.                                         
+#        ,'_ /|                    ,--, \    /  \          ,--,                    ,--,  
+#   .--. |  | :  ,----._,.       ,'_ /| |   :    |       ,'_ /|  ,----._,.       ,'_ /|  
+# ,'_ /| :  . | /   /  ' /  .--. |  | : |   | .\ :  .--. |  | : /   /  ' /  .--. |  | :  
+# |  ' | |  . .|   :     |,'_ /| :  . | .   : |: |,'_ /| :  . ||   :     |,'_ /| :  . |  
+# |  | ' |  | ||   | .\  .|  ' | |  . . |   |  \ :|  ' | |  . .|   | .\  .|  ' | |  . .  
+# :  | | :  ' ;.   ; ';  ||  | ' |  | | |   : .  ||  | ' |  | |.   ; ';  ||  | ' |  | |  
+# |  ; ' |  | ''   .   . |:  | : ;  ; | :     |`-':  | : ;  ; |'   .   . |:  | : ;  ; |  
+# :  | : ;  ; | `---`-'| |'  :  `--'   \:   : :   '  :  `--'   \`---`-'| |'  :  `--'   \ 
+# '  :  `--'   \.'__/\_: |:  ,      .-./|   | :   :  ,      .-./.'__/\_: |:  ,      .-./ 
+# :  ,      .-./|   :    : `--`----'    `---'.|    `--`----'    |   :    : `--`----'     
+#  `--`----'     \   \  /                 `---`                  \   \  /                
+#                 `--`-'                                          `--`-'                
+
+---
+
+#apiVersion: v1
+#kind: Secret
+#metadata:
+#  name: ugupugu-rsa
+#type: Opaque
+#data:
+#  rsa.pub:  # base64 PublicKey here
+#  rsa.priv: # base64 PrivateKey here
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ugupugu
+  namespace: xero
+  labels:
+    app: ugupugu
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: ugupugu
+  template:
+    metadata:
+      labels:
+        app: ugupugu
+    spec:
+      volumes:
+      - name: rsa
+        secret:
+          secretName: ugupugu-rsa
+          optional: false
+      containers:
+      - name: ugupugu
+        image: hu13er/ugupugu:latest
+        env:
+          - name: "UGUPUGU_ADDR"
+            value: "0.0.0.0:9000"
+          - name: "UGUPUGU_PRIV_KEY"
+            value: "/etc/ugupugu/keys/rsa.priv"
+          - name: "UGUPUGU_PUB_KEY"
+            value: "/etc/ugupugu/keys/rsa.pub"
+        volumeMounts:
+        - name: rsa
+          mountPath: "/etc/ugupugu/keys"
+          readOnly: true
+        ports:
+        - containerPort: 9000
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: ugupugu
+  namespace: xero
+spec:
+  selector:
+    app: ugupugu
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 9000
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ugupugu
+  namespace: xero
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: "ugupugu.roboepics.com"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ugupugu
+            port:
+              number: 80
+
