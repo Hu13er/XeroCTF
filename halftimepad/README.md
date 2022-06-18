@@ -29,7 +29,7 @@ This is what leaked `cipher.go` does: it has a function called `HalfTimePad` whi
            ---------------------------------------- 
 ```
 
-Notice that we know plain text contains flag and flag contains `xeroctf{` and if we know length of the key (`l`) and index of `xeroctf{` we could obtain a part of the key by XORing cipher text with `xeroctf{`, hence we could obtain parts of plain text. These parts should be meaningful and of course printable. So we can find `l` and `i` by bruteforcing all possible cases.
+Notice that we know the plain text contains the flag and the flag contains `xeroctf{` and if we know the length of the key (`l`) and index of `xeroctf{` we could obtain a part of the key by XORing cipher text with `xeroctf{`, hence we could obtain parts of plain text. These parts should be meaningful and of course printable. So we can find `l` and `i` by bruteforcing all possible cases.
 
 ```
                              ,_ i _,                 
@@ -99,7 +99,7 @@ for n in range(20, 101):
 
 By checking candidates, we will find that `i = 129`.
 
-Now considering `crypto.go` chooses random `l` between 20 and 100, for every `l` we can extract distinct places of plain text by almost same process:
+Now considering `crypto.go` chooses random `l` between 20 and 100, for every `l` we can extract distinct places of the plain text by almost the same process:
 
 ```
                              ,_ i _,                 
@@ -165,4 +165,4 @@ while True:
                 plain = pplain
 ```
 
-It's enough to extract first 100 bytes of plain text, so we can reveal key completly.
+It's enough to extract the first 100 bytes of the plain text, so we can reveal the key completely.

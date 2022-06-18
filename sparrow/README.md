@@ -11,7 +11,7 @@ Jack splitted his single-line file and hid the pieces in different places. Can y
 ## Solution:
 
 It's a [steganography](https://en.wikipedia.org/wiki/Steganography) problem:
-There is a 1-bit hidden picture in encoded picture such that every pixel of hidden picture, is equal to least significant bit (LSB) of corresponding pixel of encoded picture:
+There is a 1-bit hidden picture in the encoded picture such that every pixel of the hidden picture, is equal to the least significant bit (LSB) of the corresponding pixel of the encoded picture:
 
 ```
 Hidden[i, j] = LSB(Encoded[i, j])
